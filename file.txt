@@ -1,0 +1,68 @@
+lease 192.168.2.24 {
+  starts 3 2017/04/12 11:59:57;
+  ends 3 2017/04/12 12:09:57;
+  tstp 3 2017/04/12 12:09:57;
+  cltt 3 2017/04/12 11:59:57;
+  binding state free;
+  hardware ethernet 4c:34:88:c4:d6:af;
+}
+lease 192.168.2.25 {
+  starts 3 2017/04/19 13:30:35;
+  ends 3 2017/04/19 13:40:35;
+  tstp 3 2017/04/19 13:40:35;
+  cltt 3 2017/04/19 13:30:35;
+  binding state free;
+  hardware ethernet 0c:d6:bd:ba:76:34;
+}
+lease 192.168.2.23 {
+  starts 5 2017/05/12 08:53:51;
+  ends 5 2017/05/12 09:03:51;
+  tstp 5 2017/05/12 09:03:51;
+  cltt 5 2017/05/12 08:53:51;
+  binding state free;
+  hardware ethernet 28:c2:dd:d1:e7:45;
+  uid "\001(\302\335\321\347E";
+}
+lease 192.168.2.22 {
+  starts 4 2017/05/18 08:16:17;
+  ends 4 2017/05/18 08:18:17;
+  tstp 4 2017/05/18 08:18:17;
+  cltt 4 2017/05/18 08:16:17;
+  binding state free;
+  hardware ethernet e8:4e:06:35:30:59;
+  uid "\001\350N\00650Y";
+  client-hostname "Sq_List";
+}
+lease 192.168.2.21 {
+  starts 4 2017/05/18 08:21:27;
+  ends 4 2017/05/18 08:31:27;
+  tstp 4 2017/05/18 08:31:27;
+  cltt 4 2017/05/18 08:21:27;
+  binding state free;
+  hardware ethernet f4:8b:32:6e:ea:14;
+  uid "\001\364\2132n\352\024";
+}
+server-duid "\000\001\000\001 \260/\214\350N\00650Y";
+
+lease 192.168.2.21 {
+  starts 4 2017/05/18 10:12:40;
+  ends 4 2017/05/18 10:22:40;
+  cltt 4 2017/05/18 10:12:40;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet f4:8b:32:6e:ea:14;
+  uid "\001\364\2132n\352\024";
+  client-hostname "MINOTELTE-Sq_List";
+}
+lease 192.168.2.26 {
+  starts 4 2017/05/18 10:13:31;
+  ends 4 2017/05/18 10:23:31;
+  cltt 4 2017/05/18 10:13:31;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet a0:18:28:d9:cf:7e;
+  uid "\001\240\030(\331\317~";
+  client-hostname "iPhone";
+}

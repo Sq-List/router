@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>我的路由器</title>
+<script type="text/javascript">
+String.prototype.trim = function() {
+  return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+function validateForm(frm)
+{
+  var startValue = Number(frm.start.value);
+  var endValue = Number(frm.end.value);
+
+	if(!(startValue < 255 && startValue > 1))
+  {
+    alert("请填写正确的IP");
+    frm.start.focus();
+    return false;
+  }
+
+  if(!(endValue < 255 && endValue > 1))
+  {
+    alert("请填写正确的IP");
+    frm.end.focus();
+    return false;
+  }
+
+  if(startValue > endValue)
+  {
+    alert("起始地址要比结束地址要小");
+    return false;
+  }
+
+	return true;
+}
+</script>
+<style type="text/css">
+.MenuItem {
+	font-size: small;
+	color: #005555;
+	line-height: 15pt;
+}
+
+.MenuItem a:link, a:visited {
+	color: #005555;
+	text-decoration: none;
+}
+
+.MenuItem a:hover, a:active {
+	color: #00bbbb;
+	text-decoration: none;
+}
+
+.MenuGroup {
+	color: #009999;
+	font-size: medium;
+	line-height: 25pt;
+}
+.ContentBody {
+	font-size: small;
+	background-color: #EEEEEE;
+}
+.ContentTitle {
+	color: #009999;
+	background-color: #c7dec6;
+	font-size: medium;
+}
+input[type="text"]
+{
+  width: 30px;
+}
+input[type="radio"]
+{
+  margin-left: 10px;
+}
+</style>
+</head>
+
+<body>
+<h1><span style="color: #033;">我的路由器</span></h1>
+<table width="70%" border="0">
+  <tr>
+    <td width="30%" valign="top" class="MenuItem">
+    <div style="background-color: #eeeeee; border: 1px solid #003333; border-radius: 5px; padding: 20px">
+      <span class="MenuGroup">网络参数</span><br>
+      <li><a href='/status'>运行状态</a></li>
+      <li> <a href="/wanPort">WAN口设置</a></li>
+      <li><a href="/lanPort">LAN口设置</a><br>
+        <span class="MenuGroup">无线接入</span><br>
+        <li><a href="/wlanPort">无线端口设置</a></li>
+        <li><a href="/wirelessClientList">接入设备列表</a><br>
+          <span class="MenuGroup">DHCP服务器</span><br>
+        <li><a href="/dhcpServer">DHCP服务</a></li>
+        <li> <a href="/clientList">客户端列表</a><br>
+          <span class="MenuGroup">系统设置</span><br>
+        <li><a href="/changePassword">修改登录口令</a></li>
+          <li> <a href="/reboot">重启路由器</a> </li>
+        </li>
+          </li>
+          </li>
+    </div></td>
+    <td width="10%">&nbsp;</td>
+
+    <td width="60%" valign="top">
+    <form action="/submitDhcpServer" method="post" onSubmit="return validateForm(this);">
+    <table width="100%" border="0" cellpadding="5" cellspacing="0">
+      <tr>
+        <td colspan="3" class="ContentTitle">DHCP服务</td>
+      </tr>
+      <tr class="ContentBody">
+        <td>&nbsp;</td>
+        <td align="right" >&nbsp;</td>
+        <td >&nbsp;</td>
+      </tr>
+      <tr class="ContentBody">
+        <td width="11%">&nbsp;</td>
+        <td align="right" width="36%">DHCP服务：</td>
+        <td >
+          {% if serviceStatus == "active" %}
+          <input type="radio" name="serviceStatus" value="on" checked>开
+          <input type="radio" name="serviceStatus" value="off">关
+          {% else %}
+          <input type="radio" name="serviceStatus" value="on">开
+          <input type="radio" name="serviceStatus" value="off" checked>关
+          {% endif %}
+        </td>
+      </tr>
+      <tr class="ContentBody" name="ip">
+        <td>&nbsp;</td>
+        <td align="right">开始IP：</td>
+        <td>
+          {{ipPre}}
+          <input name="ipPre" type="hidden" id="ipPre" value="{{ipPre}}">
+          <input name="start" type="text" id="start" value="{{start}}">
+        </td>
+      </tr>
+      <tr class="ContentBody" name="ip">
+        <td>&nbsp;</td>
+        <td align="right">结束IP：</td>
+        <td>
+          {{ipPre}}
+          <input name="end" type="text" id="end" value="{{end}}">
+        </td>
+      </tr>
+      <tr class="ContentBody">
+        <td>&nbsp;</td>
+        <td align="right" >&nbsp;</td>
+        <td >&nbsp;</td>
+      </tr>
+    </table>
+    <p><input type="submit" class="ContentBody" value="保存">
+    &nbsp;{% if err == '0' %}<span style="color: #F00; font-size: small;">新配置成功保存，请重启路由器。</span>{% endif %}</p>
+    </form></td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
+<script type="text/javascript">
+  window.onload = setOnclick;
+
+  function setOnclick()
+  {
+    var serviceStatus = document.getElementsByName("serviceStatus");
+    for(var i in serviceStatus)
+    {
+      serviceStatus[i].onclick = function()
+      {
+        changeStatus(this.value);
+      }
+
+      if(serviceStatus[i].checked)
+      {
+        changeStatus(serviceStatus[i].value);
+      }
+    }
+  }
+
+  function changeStatus(status)
+  {
+    var ipArray = document.getElementsByName("ip");
+    if(status == "on")
+    {
+      for(var i = 0; i < ipArray.length; i++)
+      {
+        ipArray[i].style.display = "table-row";
+      }
+    }
+    else if(status == "off")
+    {
+      for(var i = 0; i < ipArray.length; i++)
+      {
+        ipArray[i].style.display = "none";
+      }
+    }
+  }
+</script>
+</body>
+</html>
