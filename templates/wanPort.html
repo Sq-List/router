@@ -46,7 +46,106 @@
 }
 </style>
 <script type="text/javascript">
+	var trArray;
 
+	function validateIP(str)
+	{
+		if (str == "")
+			return false;
+
+		regExp =/(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+
+		if (str.match(regExp))
+			return true;
+		return false;
+	}
+
+	function check(n)
+	{
+		var idArray = {
+			0:new Array(),
+			1:new Array("staticIpAddress", "staticNetmask", "staticGateWay", "staticDNS"),
+			2:new Array("username", "password")
+		}
+
+		for(i = 0; i < idArray[n].length; i++)
+		{
+			var item = document.getElementById(idArray[n][i]);
+			if(!validateIP(item.value))
+			{
+				alert("请输入正确的地址");
+				item.focus();
+				return false;
+			}
+		}
+		return true;
+	}
+
+	function setInput()
+	{
+		var selectOption = document.getElementById("selectOption");
+		var form = document.getElementById("form");
+		var selectOptionNumberInput = document.createElement("input");
+		selectOptionNumberInput.setAttribute("value", 0);
+		selectOptionNumberInput.setAttribute("name", "selectOptionNumber");
+		selectOptionNumberInput.setAttribute("type", "hidden");
+		form.appendChild(selectOptionNumberInput);
+
+		if(selectOption.selectedIndex == 0)
+		{
+			selectOptionNumberInput.setAttribute("value", 0);
+		}
+		else if(selectOption.selectedIndex == 1)
+		{
+			if(!check(1))
+			{
+				return false;
+			}
+			selectOptionNumberInput.setAttribute("value", 1);
+
+			var staticIpAddressInput = document.createElement("input");
+			staticIpAddressInput.setAttribute("value", document.getElementById("staticIpAddress").value);
+			staticIpAddressInput.setAttribute("name", "staticIpAddress");
+			staticIpAddressInput.setAttribute("type", "hidden");
+			form.appendChild(staticIpAddressInput);
+
+			var staticNetmaskInput = document.createElement("input");
+			staticNetmaskInput.setAttribute("value", document.getElementById("staticNetmask").value);
+			staticNetmaskInput.setAttribute("name", "staticNetmask");
+			staticNetmaskInput.setAttribute("type", "hidden");
+			form.appendChild(staticNetmaskInput);
+
+			var staticGateWayInput = document.createElement("input");
+			staticGateWayInput.setAttribute("value", document.getElementById("staticGateWay").value);
+			staticGateWayInput.setAttribute("name", "staticGateWay");
+			staticGateWayInput.setAttribute("type", "hidden");
+			form.appendChild(staticGateWayInput);
+
+			var staticDNSInput = document.createElement("input");
+			staticDNSInput.setAttribute("value", document.getElementById("staticDNS").value);
+			staticDNSInput.setAttribute("name", "staticDNS");
+			staticDNSInput.setAttribute("type", "hidden");
+			form.appendChild(staticDNSInput);
+		}
+		else
+		{
+			selectOptionNumberInput.setAttribute("value", 2);
+
+			var usernameInput = document.createElement("input");
+			usernameInput.setAttribute("value", document.getElementById("username").value);
+			usernameInput.setAttribute("name", "staticDNS");
+			usernameInput.setAttribute("type", "hidden");
+			form.appendChild(usernameInput);
+
+			var passwordInput = document.createElement("input");
+			passwordInput.setAttribute("value", document.getElementById("password").value);
+			passwordInput.setAttribute("name", "staticDNS");
+			passwordInput.setAttribute("type", "hidden");
+			form.appendChild(passwordInput);
+		}
+
+		form.submit();
+	}
 </script>
 </head>
 
@@ -75,7 +174,7 @@
     </div></td>
     <td width="10%">&nbsp;</td>
 
-		<form action="/submitWanPort" method="post">
+		<form action="/submitWanPort" method="post" id="form">
 
 		</form>
 
@@ -93,7 +192,7 @@
         <td width="11%">&nbsp;</td>
         <td align="right" >WAN口连接类型：</td>
         <td align="left">
-					<select class="SelectClass" id="SelectOption" onchange="setTabel(this.value)">
+					<select class="SelectClass" id="selectOption" onchange="setTabel(this.value)">
         		<option value="0">自动获得IP地址</option>
 						<option value="1">固定IP地址</option>
 						<option value="2">宽带拨号上网</option>
@@ -129,33 +228,33 @@
 			<tr class="ContentBody" name="1">
 				<td>&nbsp;</td>
 				<td align="right" >IP地址：</td>
-				<td ><input type="text" name="ipAddress" value="{{staticIpAddress}}"></td>
+				<td ><input type="text" name="staticIpAddress" id="staticIpAddress" value="{{staticIpAddress}}"></td>
 			</tr>
 			<tr class="ContentBody" name="1">
 				<td>&nbsp;</td>
 				<td align="right" >子网掩码：</td>
-				<td ><input type="text" name="netmask" value="{{staticNetmask}}"></td>
+				<td ><input type="text" name="staticNetmask" id="staticNetmask" value="{{staticNetmask}}"></td>
 			</tr>
 			<tr class="ContentBody" name="1">
 				<td>&nbsp;</td>
 				<td align="right" >网关：</td>
-				<td ><input type="text" name="geteway" value="{{staticGateWay}}"></td>
+				<td ><input type="text" name="staticGateWay" id="staticGateWay" value="{{staticGateWay}}"></td>
 			</tr>
 			<tr class="ContentBody" name="1">
 				<td>&nbsp;</td>
 				<td align="right" >DNS服务器：</td>
-				<td ><input type="text" name="dns" value="{{staticDNS}}"></td>
+				<td ><input type="text" name="staticDNS" id="staticDNS" value="{{staticDNS}}"></td>
 			</tr>
 
 			<tr class="ContentBody" name="2">
         <td>&nbsp;</td>
         <td align="right" >宽带账号：</td>
-        <td ><input type="text" name="username" value=""></td>
+        <td ><input type="text" name="username" id="username" value=""></td>
       </tr>
 			<tr class="ContentBody" name="2">
         <td>&nbsp;</td>
         <td align="right" >宽带密码：</td>
-        <td ><input type="text" name="username" value=""></td>
+        <td ><input type="password" name="password" id="password" value=""></td>
       </tr>
 			<tr class="ContentBody" name="2">
         <td width="11%">&nbsp;</td>
@@ -173,7 +272,8 @@
         <td >&nbsp;</td>
       </tr>
     </table>
-		<p><input type="button" class="ContentBody" value="保存" onclick="">
+		<p><input type="button" class="ContentBody" value="保存" onclick="setInput()">
+		&nbsp;{% if err == '0' %}<span style="color: #F00; font-size: small;">新配置成功保存，请重启路由器。</span>{% endif %}</p>
     </td>
   </tr>
 </table>
@@ -181,14 +281,14 @@
 	window.onload = function(obj)
 	{
 		setTabel({{option}});
+		document.getElementById("selectOption").selectedIndex = {{option}};
 	}
 
 	function setTabel(obj)
 	{
-		var trArray = document.getElementsByClassName("ContentBody");
+		trArray = document.getElementsByClassName("ContentBody");
 		for (var i = 2; i < trArray.length - 2; i++)
 		{
-			// console.log(trArray[i].getAttribute("name"));
 			if(trArray[i].getAttribute("name") != obj)
 			{
 				trArray[i].style.display = "none";
@@ -198,15 +298,6 @@
 				trArray[i].style.display = "table-row";
 			}
 		}
-
-		// if(obj == 1 || obj == 2)
-		// {
-		// 	trArray[trArray.length - 1].style.display = "inline-block";
-		// }
-		// else
-		// {
-		// 	trArray[trArray.length - 1].style.display = "none";
-		// }
 	}
 </script>
 </body>

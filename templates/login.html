@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <style media="screen">
+    .content
+    {
+      width: 90%;
+      margin: 0 auto;
+
+      position: relative;
+    }
+
+    .content .login
+    {
+      width: 16%;
+      height: 100px;
+      /*line-height: 100px;*/
+      margin: 0 auto;
+
+      text-align: center;
+
+      position: relative;
+      top: 200px;
+    }
+
+    .content .login input[type="submit"]
+    {
+      width: 100%;
+      margin-top: 20px;
+    }
+  </style>
+  <title>我的路由器</title>
+</head>
+<body>
+  <div class="content">
+    <form action="/submitLogin" method="post">
+      <div class="login">
+        <span>密码：</span>
+        <input type="password" name="password" value="" autofocus>
+
+        <!-- {% if err == '0' %} -->
+        <span style="color: #F00; font-size: small;">密码错误</span>
+        <!-- {% endif %} -->
+        <input type="submit" value="登录">
+      </div>
+    </form>
+  </div>
+</body>
+</html>

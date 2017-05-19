@@ -8,6 +8,7 @@ Created on 2015年2月16日
 from flask import Flask, render_template, request, redirect
 import subprocess
 import os
+import hashlib
 
 app = Flask(__name__)
 
@@ -40,14 +41,36 @@ def getWanInfo():
 
 	return (gateWay, ipv6, dns)
 
+def md5(password):
+     import hashlib
+     m = hashlib.md5()
+     m.update(password)
+     return m.hexdigest()
+
 
 @app.route('/')
+@app.route('/<err>')
+def login(err = None):
+    return render_template("login.html", err = err)
+
+@app.route('/submitLogin', methods=['GET', 'POST'])
+def submitLogin():
+    password = request.form['password'].strip(' \n')
+
+    passwordFile = open("./password", "r")
+    passWord = passwordFile.read(-1).strip(' \n')
+    passwordFile.close()
+
+    if passWord == md5(password):
+        return redirect('/status')
+    else:
+        return redirect('/0')
+
 @app.route('/status')
 def status():
     wanIPAddress, wanMACAddress, wanNetMask = getNetworkInterfaceInfo('eth0')
     lanIPAddress, lanMACAddress, lanNetMask = getNetworkInterfaceInfo('wlan0')
-    return render_template("main.html", wanMACAddress=wanMACAddress, wanIPAddress = wanIPAddress, wanNetMask=wanNetMask,
-                           lanMACAddress=lanMACAddress, lanIPAddress = lanIPAddress, lanNetMask=lanNetMask)
+    return render_template("main.html", wanMACAddress=wanMACAddress, wanIPAddress = wanIPAddress, wanNetMask = wanNetMask, lanMACAddress = lanMACAddress, lanIPAddress = lanIPAddress, lanNetMask = lanNetMask)
 
 def getHostapdConfig(param):
     cmd = "awk '/" + param + "/ {split($1, a, \"=\"); print a[2]}' /etc/hostapd/hostapd.conf"
@@ -170,8 +193,24 @@ def getDhcpServerInfo():
 
     return (subnet, netmask, start, end, routers)
 
+def getStaticInfo():
+    cmd = "cat /etc/dhcpcd.conf | awk '/static ip_address/ {split($2,a,\"=\");print(a[2])}'"
+    p = subprocess.Popen(cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
+    staticIpAddress = p.stdout.read()
+
+    cmd = "cat /etc/dhcpcd.conf | awk '/static router/ {split($2,a,\"=\");print(a[2])}'"
+    p = subprocess.Popen(cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
+    staticGateWay = p.stdout.read()
+
+    cmd = "cat /etc/dhcpcd.conf | awk '/static domain_name_servers/ {split($2,a,\"=\");print(a[2])}'"
+    p = subprocess.Popen(cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
+    staticDNS = p.stdout.read()
+
+    return (staticIpAddress, staticGateWay, staticDNS)
+
 @app.route('/wanPort')
-def wanPort():
+@app.route('/wanPort/<err>')
+def wanPort(err = None):
     autoIpAddress = "0.0.0.0"
     autoNetmask = "0.0.0.0"
     autoGateWay = "0.0.0.0"
@@ -187,6 +226,7 @@ def wanPort():
 
     dhcpcdFile = open('/etc/dhcpcd.conf', 'r')
     dhcpcd = dhcpcdFile.read(-1)
+    dhcpcdFile.close()
 
     if dhcpcd.find('eth0') == -1:
         option = "0"
@@ -195,12 +235,53 @@ def wanPort():
 
     else:
         option = "1"
+        staticIpAddress, staticGateWay, staticDNS = getStaticInfo()
+        staticNetmaskNum = staticIpAddress.split("/")[1].strip(' \n')
+        staticIpAddress = staticIpAddress.split("/")[0]
 
-    return render_template('wanPort.html', option = option, autoGateWay = autoGateWay, autoIpv6 = autoIpv6, autoDNS = autoDNS, autoIpAddress = autoIpAddress, autoNetmask = autoNetmask, staticIpAddress = staticIpAddress, staticNetmask = staticNetmask, staticGateWay = staticGateWay, staticDNS = staticDNS)
+        staticNetmask = ""
+        length = eval(staticNetmaskNum + "/8")
+        for i in range(int(length)):
+            staticNetmask = staticNetmask + "255."
 
-# @app.route('submitWanPort')
-# def submitWanPort():
+        length = 4 - length
+        for i in range(int(length)):
+            staticNetmask = staticNetmask + "0."
 
+        staticNetmask = staticNetmask.strip(".")
+
+    return render_template('wanPort.html', option = option, autoGateWay = autoGateWay, autoIpv6 = autoIpv6, autoDNS = autoDNS, autoIpAddress = autoIpAddress, autoNetmask = autoNetmask, staticIpAddress = staticIpAddress, staticNetmask = staticNetmask, staticGateWay = staticGateWay, staticDNS = staticDNS, err = err)
+
+@app.route('/submitWanPort', methods=['GET', 'POST'])
+def submitWanPort():
+    selectOptionNumber = request.form['selectOptionNumber'].strip(' \n')
+
+    if selectOptionNumber == "1":
+        staticIpAddress = request.form['staticIpAddress'].strip(' \n')
+        staticNetmask = request.form['staticNetmask'].strip(' \n')
+        staticGateWay = request.form['staticGateWay'].strip(' \n')
+        staticDNS = request.form['staticDNS'].strip(' \n')
+
+        staticNetmaskNum = staticNetmask.count("255") * 8
+        staticIpAddress = staticIpAddress + "/" + str(staticNetmaskNum)
+
+        dhcpcdFileBuffer = render_template("dhcpcd.conf")
+        dhcpcdFileBuffer = dhcpcdFileBuffer + '''
+interface eth0
+static ip_address=''' + staticIpAddress + '''
+static routers=''' + staticGateWay + '''
+static domain_name_servers=''' + staticDNS
+    else:
+        dhcpcdFileBuffer = render_template("dhcpcd.conf")
+
+    try:
+        with open('/etc/dhcpcd.conf', 'w') as fp1:
+            fp1.write(dhcpcdFileBuffer)
+
+    except IOError:
+        return u'写入配置文件失败'
+
+    return redirect("wanPort/0")
 
 @app.route('/lanPort')
 @app.route('/lanPort/<err>')
@@ -233,7 +314,7 @@ def submitLanPort():
     try:
         with open('/etc/network/interfaces', 'w') as fp1:
             fp1.write(interfacesFileBuffer)
-        with open('//etc/dhcp/dhcpd.conf', 'w') as fp2:
+        with open('/etc/dhcp/dhcpd.conf', 'w') as fp2:
             fp2.write(dhcpdFileBuffer)
 
     except IOError:
@@ -292,6 +373,32 @@ def submitDhcpServer():
         subprocess.call(["service", "isc-dhcp-server", "stop"])
 
     return redirect('/dhcpServer/0')
+
+@app.route('/changePassword')
+@app.route('/changePassword/<err>')
+def changePassword(err = None):
+    return render_template("changePassword.html", err = err)
+
+@app.route('/submitChangePassword', methods=['GET', 'POST'])
+def submitChangePassword():
+    oldPassword = request.form['oldPassword'].strip(' \n')
+
+    passwordFile = open("./password", "r")
+    password = passwordFile.read(-1).strip(' \n')
+    passwordFile.close()
+
+    if password == md5(oldPassword):
+        newPassword = request.form['newPassword'].strip(' \n')
+        try:
+            with open('./password', 'w') as fp2:
+                fp2.write(md5(newPassword))
+
+        except IOError:
+            return u'密码更改失败'
+
+        return redirect('/changePassword/0')
+    else:
+        return redirect('/changePassword/1')
 
 @app.route('/reboot')
 def reboot():
