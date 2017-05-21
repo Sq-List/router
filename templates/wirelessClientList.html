@@ -76,22 +76,22 @@
 					<tr class="ContentBody">
 						<td colspan="3">&nbsp;</td>
 					</tr>
-                    {% for i in clientsList %}
-                    <tr class="ContentBody">
-                        <td width="30%">&nbsp;</td>
-                        <td width="70%" colspan="2">{{clientsList[i].hostname}}：</td>
-                    </tr>
-                    <tr class="ContentBody">
-                        <td width="30%">&nbsp;</td>
-                        <td width="10%"></td>
-                        <td width="60%">ip：{{clientsList[i].ip}}</td>
-                    </tr>
-                    <tr class="ContentBody">
-                        <td width="30%">&nbsp;</td>
-                        <td width="10%"></td>
-                        <td width="60%">mac：{{clientsList[i].mac}}</td>
-                    </tr>
-					{% endfor %}
+            {% for i in clientsList %}
+            <tr class="ContentBody">
+                <td width="30%">&nbsp;</td>
+                <td width="70%" colspan="2">{{clientsList[i].hostname}}：</td>
+            </tr>
+            <tr class="ContentBody">
+                <td width="30%">&nbsp;</td>
+                <td width="10%"></td>
+                <td width="60%">ip：{{clientsList[i].ip}}</td>
+            </tr>
+            <tr class="ContentBody">
+                <td width="30%">&nbsp;</td>
+                <td width="10%"></td>
+                <td width="60%">mac：{{clientsList[i].mac}}</td>
+            </tr>
+					  {% endfor %}
 					<tr class="ContentBody">
 						<td colspan="3">&nbsp;</td>
 					</tr>

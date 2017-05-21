@@ -130,56 +130,56 @@ def submitWlanPort():
 def clientList():
     if "login" not in session:
         return redirect('/')
+    else:
+        file = open('/var/lib/dhcp/dhcpd.leases')
+    	clientsList = {}
+    	i = 0
 
-	file = open('/var/lib/dhcp/dhcpd.leases')
-	clientsList = {}
-	i = 0
+    	line = file.readline()
+    	while (line):
+    		if len(line) == 0:
+    			break
 
-	line = file.readline()
-	while (line):
-		if len(line) == 0:
-			break
+    		clientList = {}
+    		if line.find('{') != -1:
+    			ip = line.split(' ')[1]
+    			state = ""
+    			hostname = ""
+    			mac = ""
 
-		clientList = {}
-		if line.find('{') != -1:
-			ip = line.split(' ')[1]
-			state = ""
-			hostname = ""
-			mac = ""
+    			while True:
+    				line = file.readline()
 
-			while True:
-				line = file.readline()
+    				if line.find('}') != -1:
+    					break
 
-				if line.find('}') != -1:
-					break
+    				if line.find('state') != -1:
+    					if line.split(' ')[3] == "state":
+    						state = line.split(' ')[-1][0:-2]
 
-				if line.find('state') != -1:
-					if line.split(' ')[3] == "state":
-						state = line.split(' ')[-1][0:-2]
+    				if line.find('client-hostname') != -1:
+    					hostname = line.split('"')[1]
 
-				if line.find('client-hostname') != -1:
-					hostname = line.split('"')[1]
+    				if line.find('hardware') != -1:
+    					mac = line.split(' ')[4][0:-2]
 
-				if line.find('hardware') != -1:
-					mac = line.split(' ')[4][0:-2]
+    			if state == "free":
+    				continue
 
-			if state == "free":
-				continue
+    			clientList['ip'] = ip
+    			clientList['hostname'] = hostname
+    			clientList['mac'] = mac
 
-			clientList['ip'] = ip
-			clientList['hostname'] = hostname
-			clientList['mac'] = mac
+    		if clientList != {}:
+    			if str(clientsList.values()).find(mac) == -1:
+    				clientsList[i] = clientList
+    				i += 1
 
-		if clientList != {}:
-			if str(clientsList.values()).find(mac) == -1:
-				clientsList[i] = clientList
-				i += 1
+    		line = file.readline()
 
-		line = file.readline()
-
-	file.close()
-	# print clientsList
-	return render_template('wirelessClientList.html', clientsList = clientsList)
+    	file.close()
+    	# print clientsList
+    	return render_template('wirelessClientList.html', clientsList = clientsList)
 
 
 def getInterfacesConfig(param):
