@@ -5,12 +5,14 @@ Created on 2015年2月16日
 @author: wfq
 '''
 
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 import subprocess
 import os
 import hashlib
 
 app = Flask(__name__)
+# 用于session加密
+app.secret_key = "SA125DCS14/56CS156"
 
 def getNetworkInterfaceInfo(iface):
     cmd = "ifconfig " + iface + " | awk '/inet addr/ {split($2, a, \":\"); print a[2]}'"
@@ -41,6 +43,7 @@ def getWanInfo():
 
 	return (gateWay, ipv6, dns)
 
+# 用于给密码进行md5加密
 def md5(password):
      import hashlib
      m = hashlib.md5()
@@ -51,7 +54,10 @@ def md5(password):
 @app.route('/')
 @app.route('/<err>')
 def login(err = None):
-    return render_template("login.html", err = err)
+    if "login" in session:
+        return redirect('/status')
+    else:
+        return render_template("login.html", err = err)
 
 @app.route('/submitLogin', methods=['GET', 'POST'])
 def submitLogin():
@@ -62,12 +68,16 @@ def submitLogin():
     passwordFile.close()
 
     if passWord == md5(password):
+        session['login'] = 1
         return redirect('/status')
     else:
         return redirect('/0')
 
 @app.route('/status')
 def status():
+    if "login" not in session:
+        return redirect('/')
+
     wanIPAddress, wanMACAddress, wanNetMask = getNetworkInterfaceInfo('eth0')
     lanIPAddress, lanMACAddress, lanNetMask = getNetworkInterfaceInfo('wlan0')
     return render_template("main.html", wanMACAddress=wanMACAddress, wanIPAddress = wanIPAddress, wanNetMask = wanNetMask, lanMACAddress = lanMACAddress, lanIPAddress = lanIPAddress, lanNetMask = lanNetMask)
@@ -80,6 +90,9 @@ def getHostapdConfig(param):
 @app.route('/wlanPort')
 @app.route('/wlanPort/<err>')
 def wlanPort(err = None):
+    if "login" not in session:
+        return redirect('/')
+
     ssid = getHostapdConfig('^ssid')
     ignoreBroadcastSSID = getHostapdConfig('ignore_broadcast_ssid').strip('\n')
     if ignoreBroadcastSSID == '1':
@@ -92,6 +105,9 @@ def wlanPort(err = None):
 
 @app.route('/submitWlanPort', methods=['GET', 'POST'])
 def submitWlanPort():
+    if "login" not in session:
+        return redirect('/')
+
     ssid = request.form['ssid'].strip(' \n')
     channel = request.form['channel'].strip(' \n')
     passwd = request.form['passwd'].strip(' \n')
@@ -112,6 +128,9 @@ def submitWlanPort():
 
 @app.route('/wirelessClientList')
 def clientList():
+    if "login" not in session:
+        return redirect('/')
+
 	file = open('/var/lib/dhcp/dhcpd.leases')
 	clientsList = {}
 	i = 0
@@ -211,6 +230,9 @@ def getStaticInfo():
 @app.route('/wanPort')
 @app.route('/wanPort/<err>')
 def wanPort(err = None):
+    if "login" not in session:
+        return redirect('/')
+
     autoIpAddress = "0.0.0.0"
     autoNetmask = "0.0.0.0"
     autoGateWay = "0.0.0.0"
@@ -254,6 +276,9 @@ def wanPort(err = None):
 
 @app.route('/submitWanPort', methods=['GET', 'POST'])
 def submitWanPort():
+    if "login" not in session:
+        return redirect('/')
+
     selectOptionNumber = request.form['selectOptionNumber'].strip(' \n')
 
     if selectOptionNumber == "1":
@@ -286,6 +311,9 @@ static domain_name_servers=''' + staticDNS
 @app.route('/lanPort')
 @app.route('/lanPort/<err>')
 def lanPort(err = None):
+    if "login" not in session:
+        return redirect('/')
+
     ipAddress = getInterfacesConfig('address').strip('\n')
     netmask = getInterfacesConfig('netmask').strip('\n')
     return render_template('lanPort.html', ipAddress = ipAddress, netmask = netmask, err = err)
@@ -293,6 +321,9 @@ def lanPort(err = None):
 
 @app.route('/submitLanPort', methods=['GET', 'POST'])
 def submitLanPort():
+    if "login" not in session:
+        return redirect('/')
+
     subnet, netmask, start, end, routers = getDhcpServerInfo()
     subnet = subnet.strip(';\n')
     netmask = netmask.strip(';\n')
@@ -330,6 +361,9 @@ def getServiceStatus():
 @app.route('/dhcpServer')
 @app.route('/dhcpServer/<err>')
 def dhcpServer(err = None):
+    if "login" not in session:
+        return redirect('/')
+
     subnet, netmask, start, end, routers = getDhcpServerInfo()
 
     ipPre = (subnet.strip(' \n'))[0:subnet.rfind('.') + 1]
@@ -341,6 +375,9 @@ def dhcpServer(err = None):
 
 @app.route('/submitDhcpServer', methods=['GET', 'POST'])
 def submitDhcpServer():
+    if "login" not in session:
+        return redirect('/')
+
     serviceStatus = request.form['serviceStatus'].strip(' \n')
 
     if serviceStatus == "on":
@@ -377,10 +414,16 @@ def submitDhcpServer():
 @app.route('/changePassword')
 @app.route('/changePassword/<err>')
 def changePassword(err = None):
+    if "login" not in session:
+        return redirect('/')
+
     return render_template("changePassword.html", err = err)
 
 @app.route('/submitChangePassword', methods=['GET', 'POST'])
 def submitChangePassword():
+    if "login" not in session:
+        return redirect('/')
+
     oldPassword = request.form['oldPassword'].strip(' \n')
 
     passwordFile = open("./password", "r")
@@ -396,12 +439,21 @@ def submitChangePassword():
         except IOError:
             return u'密码更改失败'
 
-        return redirect('/changePassword/0')
+        # 用于登出，将session中的login字段pop
+        # Flask中的session基于字典类型实现，
+        # 调用pop方法时会返回pop的键对应的值；
+        # 如果要pop的键并不存在，
+        # 那么返回值是pop()的第二个参数
+        session.pop('login', None)
+        return redirect('/')
     else:
         return redirect('/changePassword/1')
 
 @app.route('/reboot')
 def reboot():
+    if "login" not in session:
+        return redirect('/')
+
     os.system('sh reboot.sh &')
     return render_template('reboot.html')
 
